@@ -241,14 +241,14 @@ class Hash_Table {
 
   public:
     // Constructor, destructor
-    Hash_Table(unsigned N_Buckets = 16) {
-      /* I require that there are at least 16 buckets (I picked a power of 2)
-      So that the hashing function can work super quickly. */
-      if(N_Buckets < 16) { N_Buckets = 16; }
+    Hash_Table(unsigned N_Buckets = 11) {
+      /* I require that there are at least 11 buckets (I just picked a prime
+      number to prevent collissions) */
+      if(N_Buckets < 11) { N_Buckets = 11; }
 
       Hash_Table::N_Buckets = N_Buckets;
       Buckets = new Item_List<unsigned, V>[N_Buckets];
-    } // Hash_Table(unsigned N_Buckets = 16) {
+    } // Hash_Table(unsigned N_Buckets = 11) {
 
     ~Hash_Table() { delete [] Buckets; }
 

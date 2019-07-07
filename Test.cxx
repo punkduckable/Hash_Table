@@ -1,6 +1,6 @@
 #include <cstdlib>
 #include <iostream>
-#include "HashTable_Chaining.cxx"
+#include "HashTable.cxx"
 
 // Unit testing stuff
 #define CATCH_CONFIG_MAIN
