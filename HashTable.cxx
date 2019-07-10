@@ -123,11 +123,14 @@ class Hash_Table {
     // Hashing function
     unsigned Hash(unsigned key) const { return (key % N_Buckets); }
 
-    // Function to increment bucket index (for probing)
-    void Increment_Bucket_Index(unsigned & bucket_index) const {
-      bucket_index++;
+    /* Function to Update bucket index (for probing). Hash_Value is the
+    hashed key value, i is the number of times that the bucket index has been
+    updated. */
+    unsigned Calculate_Bucket_Index(unsigned Hash_Value, unsigned num_searched) const {
+      unsigned bucket_index = Hash_Value + num_searched;
       if(bucket_index == N_Buckets) { bucket_index = 0; }
-    } // void Increment_Bucket_Index(unsigned & bucket_index) {
+      return bucket_index;
+    } // unsigned Calculate_Bucket_Index(unsigned Hash_Value, unsigned num_searched) const {
 
     // Delete the implicit = operator and copy constructor methods
     Hash_Table(const Hash_Table &) = delete;
@@ -148,8 +151,12 @@ class Hash_Table {
 
     // Insert an item into the table.
     void insert(unsigned key, V value) {
-      // First, calculate the key of the hash
-      unsigned bucket_index = Hash(key);
+      // First, calculate the hash index
+      unsigned hash_index = Hash(key);
+
+      /* Initialize num_searched and bucket index */
+      unsigned num_searched = 0;
+      unsigned bucket_index = Calculate_Bucket_Index(hash_index, num_searched);
 
       /* Loop through the buckets until we either find one that isn't full or
       whose key matches the specified key. If such a bucket is found then
@@ -158,8 +165,7 @@ class Hash_Table {
       We keep track of how many buckets we've looked through. If that number
       excedes the number of buckets then no item with the specified key is in
       the table. */
-      unsigned buckets_searched = 0;
-      while(buckets_searched < N_Buckets ) {
+      while(num_searched < N_Buckets ) {
         /* First, check if the current bucket is full. If it is, then check if
         its key matches the specified key. If so, update that bucket. */
         if(Buckets[bucket_index].getStatus() == BUCKET_STATUS::FULL) {
@@ -179,10 +185,10 @@ class Hash_Table {
         } // else {
 
         /* If we're here then it means that the current bucket was full but its
-        key did not match the specified key. Increment the bucket index. */
-        buckets_searched++;
-        Increment_Bucket_Index(bucket_index);
-      } // while(buckets_searched < N_Buckets ) {
+        key did not match the specified key. Calculate the new bucket index. */
+        num_searched++;
+        bucket_index = Calculate_Bucket_Index(hash_index, num_searched);
+      } // while(num_searched < N_Buckets ) {
 
       /* If we get here then it means that the entire list was searched and
       every bucket was full. We need to throw an exception. */
@@ -193,8 +199,13 @@ class Hash_Table {
 
     // remove the value with the specified key from the table.
     void remove(unsigned key) {
-      // Calculate the bucket index.
-      unsigned bucket_index = Hash(key);
+      // Calculate the hash index.
+      unsigned hash_index = Hash(key);
+
+      /* Initialize num_searched and bucket index */
+      unsigned num_searched = 0;
+      unsigned bucket_index = Calculate_Bucket_Index(hash_index, num_searched);
+
 
       /* Now, cycle through the buckets until we find a bucket that has been
       empty since start. At each step, we check if the key of the current bucket
@@ -219,24 +230,27 @@ class Hash_Table {
       We keep track of how many buckets we've looked through. If that number
       excedes the number of buckets then no item with the specified key is in
       the table. */
-      unsigned buckets_searched = 0;
-      while(Buckets[bucket_index].getStatus() != BUCKET_STATUS::EMPTY_SINCE_START && buckets_searched < N_Buckets) {
+      while(Buckets[bucket_index].getStatus() != BUCKET_STATUS::EMPTY_SINCE_START && num_searched < N_Buckets) {
         /* If the current buckets' key matches the specified key then empty
         that bucket. */
         if(Buckets[bucket_index].getKey() == key) { Buckets[bucket_index].Empty(); }
 
-        // Otherwise, increment the bucket index.
-        buckets_searched++;
-        Increment_Bucket_Index(bucket_index);
-      } // while(Buckets[bucket_index].getStatus() != BUCKET_STATUS::EMPTY_SINCE_START && buckets_searched < N_Buckets) {
+        /* Otherwise, calculate the new bucket index. */
+        num_searched++;
+        bucket_index = Calculate_Bucket_Index(hash_index, num_searched);
+      } // while(Buckets[bucket_index].getStatus() != BUCKET_STATUS::EMPTY_SINCE_START && num_searched < N_Buckets) {
     } // void remove(unsigned key) {
 
 
     /* Find the value of the item with the specified key. Throws an exception
     if no item with the specified key can be found */
     V search(unsigned key) const {
-      // First, find the bucket index.
-      unsigned bucket_index = Hash(key);
+      // First, calculate the hash index
+      unsigned hash_index = Hash(key);
+
+      /* Initialize num_searched and the bucket index */
+      unsigned num_searched = 0;
+      unsigned bucket_index = Calculate_Bucket_Index(hash_index, num_searched);
 
       /* Now, try finding a bucket in the list whose key matches the specified
       key. If no such key can be found then we throw an exception.
@@ -244,22 +258,20 @@ class Hash_Table {
       We keep track of how many buckets we've looked through. If that number
       excedes the number of buckets then no item with the specified key is in
       the table. */
-
-      unsigned buckets_searched = 0;
-      while(Buckets[bucket_index].getStatus() != BUCKET_STATUS::EMPTY_SINCE_START && buckets_searched < N_Buckets) {
+      while(Buckets[bucket_index].getStatus() != BUCKET_STATUS::EMPTY_SINCE_START && num_searched < N_Buckets) {
         /* Check if the current bucket is full. If so, see if its key matches
         the specified key. If so then we have found our match! */
         if(Buckets[bucket_index].getStatus() == BUCKET_STATUS::FULL) {
           if(Buckets[bucket_index].getKey() == key) { return Buckets[bucket_index].getValue(); }
         } // if(Buckets[bucket_index].getStatus() == BUCKET_STATUS::FULL) {
 
-        /* Otherwise, increment the bucket index */
-        buckets_searched++;
-        Increment_Bucket_Index(bucket_index);
-      } // while(Buckets[bucket_index].getStatus() != BUCKET_STATUS::EMPTY_SINCE_START && buckets_searched < N_Buckets) {
+        /* Otherwise, calculate the new bucket index */
+        num_searched++;
+        bucket_index = Calculate_Bucket_Index(hash_index, num_searched);
+      } // while(Buckets[bucket_index].getStatus() != BUCKET_STATUS::EMPTY_SINCE_START && num_searched < N_Buckets) {
 
       /* If we get here then it means that no item in the table has the
-      requested key. Throw an excception */
+      requested key. Throw an exception */
       char Error_Message_Buffer[500];
       sprintf(Error_Message_Buffer,
               "Invalid Key Error: Thrown by Hash_Table::search\n"
