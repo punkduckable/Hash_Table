@@ -6,77 +6,42 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-// Test Item Node
-TEST_CASE("Item Node tests", "[Item_Node]") {
-  // First, make two Item Nodes.
-  unsigned key1 = 1;
-  unsigned key2 = 5;
-  double value1 = 2.2;
-  double value2 = 3.23;
 
-  Item_Node<unsigned, double> One(key1, value1);
-  Item_Node<unsigned, double> Two(key2, value2);
+TEST_CASE("Bucket tests!", "[Bucket]") {
+  /* First, create some buckets */
+  Bucket<unsigned, double> B1;
+  Bucket<unsigned, double> B2;
 
-  // Now, check that they set up the values correctly
-  REQUIRE(One.getKey() == key1);
-  REQUIRE(One.getValue() == value1);
-  REQUIRE(Two.getKey() == key2);
-  REQUIRE(Two.getValue() == value2);
+  /* Make sure that the buckets are empty and not searchable */
+  REQUIRE( B1.getStatus() == BUCKET_STATUS::EMPTY_SINCE_START );
+  REQUIRE_THROWS( B2.getKey() );
+  REQUIRE_THROWS( B1.getValue() );
 
-  // Now check that item nodes can update their next paramater as expected.
-  REQUIRE(One.getNext() == NULL);
-  One.setNext(&Two);
-  Two.setNext(&One);
-  REQUIRE(One.getNext() == &Two );
-  REQUIRE(Two.getNext() == &One );
+  /* Now, insert some items into the buckets. */
+  unsigned key1 = 29, key2 = 320;
+  double value1 = 2392.32, value2 = 5802.2939;
+  B1.setKey(key1);
+  B1.setValue(value1);
+  B2.setKey(key2);
+  B2.setValue(value2);
 
-  // Now check that Item_Nodes can have their values updated
-  double new_value = 23.232;
-  One.setValue(new_value);
-  REQUIRE(One.getValue() == new_value);
-} // TEST_CASE("Item Node tests", "[Item_Node]") {
+  /* Now, make sure that the new key/values are accessible and the status' have
+  been updated. */
+  REQUIRE( B1.getKey() == key1 );
+  REQUIRE( B2.getValue() == value2 );
+  REQUIRE( B1.getValue() == value1 );
+  REQUIRE( B1.getStatus() == BUCKET_STATUS::FULL );
+  REQUIRE( B2.getStatus() == BUCKET_STATUS::FULL );
 
-
-
-// Test Item List
-TEST_CASE("Item List tests", "[Item_List]") {
-  // let's make an item list.
-  Item_List<unsigned, double> List;
-
-  // Let's search for an item in the list. The list should be empty, so this
-  // should throw an exception
-  REQUIRE_THROWS( List.get(12) );
-
-  /* Add an item, see that it's accessible, remove that item (so that the list
-  is empty again) and check that the item is now inaccessible. */
-  double value0 = 20392.20;
-  List.put(1, value0);
-  REQUIRE( List.get(1) == value0 );
-  List.remove(1);
-  REQUIRE_THROWS( List.get(1) );
-
-  // Now, let's add some items and see that they're accessible
-  double value1 = 2.332;
-  double value2 = -1.293;
-  List.put(12, value1);
-  List.put(14, value2);
-  REQUIRE( List.get(14) == value2 );
-  REQUIRE( List.get(12) == value1 );
-  //REQUIRE_THROWS( List.get(5) );
-
-  // Now, update one of the values and see that it worked
-  double value3 = 29392.32;
-  List.put(12, value3);
-  REQUIRE( List.get(12) == value3 );
-
-  // Now, remove an item and make sure that it's inaccessible
-  List.remove(12);
-  REQUIRE_THROWS( List.get(12) );
-} // TEST_CASE("Item List tests", "[Item_List]") {
+  /* Now, empty a bucket and make sure that they're not accessible (and the
+  bucket status gets update) */
+  B1.Empty();
+  REQUIRE( B1.getStatus() == BUCKET_STATUS::EMPTY_SINCE_REMOVAL );
+  REQUIRE_THROWS( B1.getKey() );
+  REQUIRE_THROWS( B1.getValue() );
+} // TEST_CASE("Bucket tests!", "[Bucket]") {
 
 
-
-void Print_Table(const Hash_Table<double> & H) { std::cout << H; }
 
 TEST_CASE("Hash Table tests!", "[Hash_Table]") {
   /* First, let's make a hashtable of doubles. We'll use the default number of
@@ -101,7 +66,7 @@ TEST_CASE("Hash Table tests!", "[Hash_Table]") {
   REQUIRE_THROWS( H.search(0) );
 
   /* Now let's make sure that the table can handle collissions */
-  unsigned key3 = 0, key4 = 16;
+  unsigned key3 = 0, key4 = 11;
   double value3 = 129.293, value4 = 5802.29;
   H.insert(key3, value3);
   H.insert(key4, value4);
@@ -119,4 +84,32 @@ TEST_CASE("Hash Table tests!", "[Hash_Table]") {
   /* Now check that we can remove items from the table */
   H.remove(key4);
   REQUIRE_THROWS( H.search(key4) );
+} // TEST_CASE("Hash Table tests!", "[Hash_Table]") {
+
+
+
+TEST_CASE("More Hash Table tests!", "[Hash_Table][More]") {
+  /* First, let's make a hashtable. This table should have 11 buckets (the
+  default) */
+  Hash_Table<double> H{};
+
+  /* Now, add some items to the hash table and check that they can be found. */
+  unsigned key1 = 0, key2 = 11;
+  double value1 = 123.456, value2 = 78.90;
+  H.insert(key1, value1);
+  H.insert(key2, value2);
+  REQUIRE( H.search(key2) == value2 );
+
+  /* Now, remove the item with key1, make sure that it's gone (and key2 can
+  still be found) and then insert a new item with key2. */
+  H.remove(key1);
+  REQUIRE_THROWS( H.search(key1) );
+  REQUIRE( H.search(key2) == value2 );
+  H.insert(key2, value1);
+  REQUIRE( H.search(key2) == value1 );
+
+  /* There may now be multiple buckets with key key2. Let's remove key2 and
+  check that key2 can no longer be searched for. */
+  H.remove(key2);
+  REQUIRE_THROWS( H.search(key2) );
 } // TEST_CASE("Hash Table tests!", "[Hash_Table]") {
