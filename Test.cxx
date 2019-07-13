@@ -78,12 +78,23 @@ TEST_CASE("Hash Table tests!", "[Hash_Table]") {
   H.insert(key4, value5);
   REQUIRE( H.search(key4) == value5 );
 
-  // Just for fun, print out the table!
-  std::cout << H;
 
   /* Now check that we can remove items from the table */
   H.remove(key4);
   REQUIRE_THROWS( H.search(key4) );
+
+  printf("Old (before resizing) table:\n");
+  std::cout << H << "\n";
+
+  /* Now, let's resize the hash table and check that we can still get 1, 2, and
+  3 using keys 1, 2, and 3, respectivly. Recall that we just removed key 4. */
+  H.resize();
+  REQUIRE( H.search(key1) == value1 );
+  REQUIRE( H.search(key2) == value2 );
+  REQUIRE( H.search(key3) == value3 );
+
+  printf("New (after resizing) table:\n");
+  std::cout << H << "\n";
 } // TEST_CASE("Hash Table tests!", "[Hash_Table]") {
 
 

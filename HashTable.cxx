@@ -281,6 +281,41 @@ class Hash_Table {
     } // V search(unsigned key) const {
 
 
+    /* resize the table */
+    void resize() {
+      /* First, pick a new bucket size. This should be the first prime that is
+      larger than twice the current bucket size.
+
+      Since I haven't written a prime finding function, I'm just going to use
+      twice the current size plus 1 */
+      unsigned old_N_buckets = N_Buckets;
+      N_Buckets = 2*(N_Buckets) + 1;
+
+      /* Now, allocate a new bucket list. We need to keep track of the old
+      bucket list, however, so that we can transfer its items and free it. */
+      Bucket<unsigned, V>* Old_Buckets = Buckets;
+      Buckets = new Bucket<unsigned, V>[N_Buckets];
+
+      /* Now, we need to transfer the old buckets into the new bucket list. */
+      for(unsigned i = 0; i < old_N_buckets; i++) {
+        /* Check if the current bucket is full. If so, insert it into the new
+        bucket list.
+
+        Note: We do not need to worry about old buckets that are empty since
+        removal. This is because the old items are 1-by-1 being inserted into
+        the new list. Thus, we're starting fresh. Any "EMPTY_SINCE_REMOVAL" gaps
+        in the old list will be filled. */
+        if(Old_Buckets[i].getStatus() == BUCKET_STATUS::FULL) {
+          unsigned key = Old_Buckets[i].getKey();
+          V value = Old_Buckets[i].getValue();
+          Hash_Table::insert(key, value);
+        } // if(Old_Buckets[i].getStatus() == BUCKET_STATUS::FULL) {
+      } // for(unsigned i = 0; i < old_N_buckets; i++) {
+
+      /* The buckets should now be transfered. Free the old bucket list. */
+      delete [] Old_Buckets;
+    } // void resize() {
+
     // Printing method
     friend std::ostream & operator<<(std::ostream & out, const Hash_Table & Table) {
       unsigned N_Buckets = Table.N_Buckets;
