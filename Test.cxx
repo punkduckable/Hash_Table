@@ -76,8 +76,6 @@ TEST_CASE("Item List tests", "[Item_List]") {
 
 
 
-void Print_Table(const Hash_Table<double> & H) { std::cout << H; }
-
 TEST_CASE("Hash Table tests!", "[Hash_Table]") {
   /* First, let's make a hashtable of doubles. We'll use the default number of
   buckets for now. */
@@ -100,8 +98,8 @@ TEST_CASE("Hash Table tests!", "[Hash_Table]") {
   REQUIRE( H.search(key2) == value2 );
   REQUIRE_THROWS( H.search(0) );
 
-  /* Now let's make sure that the table can handle collissions */
-  unsigned key3 = 0, key4 = 16;
+  /* Now let's make sure that the table can handle collisions */
+  unsigned key3 = 0, key4 = 11;
   double value3 = 129.293, value4 = 5802.29;
   H.insert(key3, value3);
   H.insert(key4, value4);
@@ -113,10 +111,51 @@ TEST_CASE("Hash Table tests!", "[Hash_Table]") {
   H.insert(key4, value5);
   REQUIRE( H.search(key4) == value5 );
 
-  // Just for fun, print out the table!
-  std::cout << H;
-
   /* Now check that we can remove items from the table */
   H.remove(key4);
   REQUIRE_THROWS( H.search(key4) );
+
+  /* Re-insert item 4. */
+  H.insert(key4, value4);
+  printf("Old (before resizing) table:\n");
+  std::cout << H << "\n";
+
+  /* Now, let's resize the hash table and check that we can still get 1, 2, 3,
+  and 4 using keys 1, 2, 3, and 4, respectivly. */
+  H.resize();
+  REQUIRE( H.search(key1) == value1 );
+  REQUIRE( H.search(key2) == value2 );
+  REQUIRE( H.search(key3) == value3 );
+  REQUIRE( H.search(key4) == value4 );
+
+  printf("New (after resizing) table:\n");
+  std::cout << H << "\n";
+} // TEST_CASE("Hash Table tests!", "[Hash_Table]") {
+
+
+
+TEST_CASE("More Hash Table tests!", "[Hash_Table][More]") {
+  /* First, let's make a hashtable. This table should have 11 buckets (the
+  default) */
+  Hash_Table<double> H{};
+
+  /* Now, add some items to the hash table and check that they can be found. */
+  unsigned key1 = 0, key2 = 11;
+  double value1 = 123.456, value2 = 78.90;
+  H.insert(key1, value1);
+  H.insert(key2, value2);
+  REQUIRE( H.search(key2) == value2 );
+
+  /* Now, remove the item with key1, make sure that it's gone (and key2 can
+  still be found) and then insert a new item with key2. */
+  H.remove(key1);
+  REQUIRE_THROWS( H.search(key1) );
+  REQUIRE( H.search(key2) == value2 );
+  H.insert(key2, value1);
+  REQUIRE( H.search(key2) == value1 );
+
+  /* There may now be multiple buckets with key key2. Let's remove key2 and
+  check that key2 can no longer be searched for. */
+  H.remove(key2);
+  REQUIRE_THROWS( H.search(key2) );
 } // TEST_CASE("Hash Table tests!", "[Hash_Table]") {

@@ -138,15 +138,25 @@ class Item_List {
         // If entry's key matches the specified key, remove that node!
         if(entry->getKey() == key) {
           /* If the first node's key matches the specified key then we just need
-          to update Start. Otherwise, we need to have prev the previous node
-          point to the node after entry. */
+          to update Start. If this entry is the last node in the list then we
+          need to update the End pointer. Otherwise, we need to have prev the
+          previous node point to the node after entry. */
           if(entry == Start) {
             /* If the list has just one item, then we need to also update End.
             Otherwise, just have Start point to the next node. */
             if(Start == End) { Start = End = NULL; }
             else { Start = Start->getNext(); }
           } //   if(entry == Start) {
-          else { prev->setNext(entry->getNext()); }
+          else {
+            /* If entry is last item in the list then prev is the new end. Then
+            update prev's next entry.
+
+            Note: In if entry is End then entry->getNext() is NULL (which is
+            what the last item's Next pointer should be), so we don't have to
+            modify how prev's Next pointer is updated. */
+            if(entry == End) { End = prev; }
+            prev->setNext(entry->getNext());
+          } // else {
 
           // Now delete the removed node
           delete entry;
@@ -186,6 +196,10 @@ class Item_List {
     } // V get(const K key) {
 
 
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Friends!
+
     // Printing method
     friend std::ostream& operator<<(std::ostream & os, const Item_List<K, V>& List) {
       Item_Node<K, V>* entry = List.Start;
@@ -201,6 +215,9 @@ class Item_List {
 
       return os;
     } // std::ostream& operator<<(std::ostream & os, const Item_Node<K, V>& List) {
+
+    template<typename VH>
+    friend class Hash_Table;
 }; // class Item_List {
 
 
@@ -291,6 +308,41 @@ class Hash_Table {
         throw Invalid_Key(Error_Message_Buffer);
       } // catch (const Item_Not_In_List& Er ) {
     } // V search(unsigned key) const {
+
+
+    /* resize the table */
+    void resize() {
+      /* First, pick a new bucket size. This should be the first prime that is
+      larger than twice the current bucket size.
+      Since I haven't written a prime finding function, I'm just going to use
+      twice the current size plus 1 */
+      unsigned old_N_buckets = N_Buckets;
+      N_Buckets = 2*(N_Buckets) + 1;
+
+      /* Now, allocate a new bucket list. We need to keep track of the old
+      bucket list, however, so that we can transfer its items and free it. */
+      Item_List<unsigned, V>* Old_Buckets = Buckets;
+      Buckets = new Item_List<unsigned, V>[N_Buckets];
+
+      /* Now, we need to transfer the old buckets into the new bucket list. */
+      for(unsigned i = 0; i < old_N_buckets; i++) {
+        /* For each bucket, we 1-by-1 insert the items in its item list into
+        the new buckets. */
+        Item_Node<unsigned, V>* entry = Old_Buckets[i].Start;
+        while(entry != NULL) {
+          /* Insert entry into the new list of buckets */
+          unsigned key = entry->getKey();
+          V value = entry->getValue();
+          Hash_Table::insert(key, value);
+
+          /* Update entry */
+          entry = entry->getNext();
+        } // while(entry != NULL) {
+      } // for(unsigned i = 0; i < old_N_buckets; i++) {
+
+      /* The buckets should now be transfered. Free the old bucket list. */
+      delete [] Old_Buckets;
+    } // void resize() {
 
 
     // Printing method
