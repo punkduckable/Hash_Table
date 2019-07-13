@@ -142,19 +142,26 @@ class Item_List {
           need to update the End pointer. Otherwise, we need to have prev the
           previous node point to the node after entry. */
           if(entry == Start) {
-            /* If the list has just one item, then we need to also update End.
-            Otherwise, just have Start point to the next node. */
-            if(Start == End) { Start = End = NULL; }
-            else { Start = Start->getNext(); }
+            /* If the entry also happens to be the last item, then the end is
+            now null. */
+            if(entry == End) { Start = End = NULL; }
+
+            /* Set Start to entry's next pointer.
+            
+            Note: This will work even if entry == End. In that case,
+            entry->Next is NULL (which is what Start should be in this case) */
+            Start = entry->getNext();
           } //   if(entry == Start) {
           else {
-            /* If entry is last item in the list then prev is the new end. Then
-            update prev's next entry.
-
-            Note: In if entry is End then entry->getNext() is NULL (which is
-            what the last item's Next pointer should be), so we don't have to
-            modify how prev's Next pointer is updated. */
+            /* If entry is last item in the list then prev is the new end. */
             if(entry == End) { End = prev; }
+
+            /* Update prev's next entry.
+
+            Note: This works even if entry == end. In that case,
+            entry->getNext() is NULL (which is what we want prev's next pointer
+            to point to since prev is the ned End). Thus, we don't have to
+            modify how prev's Next pointer is updated. */
             prev->setNext(entry->getNext());
           } // else {
 
