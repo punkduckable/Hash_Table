@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <iostream>
 #include "HashTable.cxx"
+#include "ItemList.hxx"
+
 
 // Unit testing stuff
 #define CATCH_CONFIG_MAIN
