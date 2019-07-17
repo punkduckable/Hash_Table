@@ -1,6 +1,6 @@
 #include <cstdlib>
 #include <iostream>
-#include "HashTable.cxx"
+#include "HashTable.hxx"
 #include "ItemList.hxx"
 
 
