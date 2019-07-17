@@ -50,88 +50,14 @@ class Hash_Table {
       Hash_Table::N_Buckets = N_Buckets;
       Buckets = new Item_List<unsigned, V>[N_Buckets];
     } // Hash_Table(unsigned N_Buckets = 11) {
-
     ~Hash_Table() { delete [] Buckets; }
 
 
-    // Insert an item into the table.
-    void insert(unsigned key, V value) {
-      // First, calculate the key of the hash
-      unsigned bucket_index = Hash(key);
-
-      // Now, add the new key-value pair into the selected bucket.
-      Buckets[bucket_index].put(key, value);
-
-      /* Finally, check if the length of that bucket's list is longer than the
-      maximum list lenght. If so then resize.  */
-      if(Buckets[bucket_index].GetLength() > Max_List_Length) { (*this).resize(); }
-    } // void insert(unsigned key, V value) {
-
-
-    // remove the value with the specified key from the table.
-    void remove(unsigned key) {
-      // Calculate the bucket index.
-      unsigned bucket_index = Hash(key);
-
-      // Remove the item with the specified key from the selected bucket
-      Buckets[bucket_index].remove(key);
-    } // void remove(unsigned key) {
-
-
-    /* Find the value of the item with the specified key. Throws an exception
-    if no item with the specified key can be found */
-    V search(unsigned key) const {
-      // First, find the bucket index.
-      unsigned bucket_index = Hash(key);
-
-      // Now, try finding an item with the specified key in the selected bucket.
-      try { return Buckets[bucket_index].get(key); }
-      catch (const Item_Not_In_List& Er ) {
-        /* If no item with the specified value can be found, then we raise an
-        Invalid_Key exception. */
-        char Error_Message_Buffer[500];
-        sprintf(Error_Message_Buffer,
-                "Invalid Key Error: This hash table does not have an entry with key %d\n",
-                key);
-        throw Invalid_Key(Error_Message_Buffer);
-      } // catch (const Item_Not_In_List& Er ) {
-    } // V search(unsigned key) const {
-
-
-    /* resize the table */
-    void resize() {
-      /* First, pick a new bucket size. This should be the first prime that is
-      larger than twice the current bucket size.
-      Since I haven't written a prime finding function, I'm just going to use
-      twice the current size plus 1 */
-      unsigned old_N_buckets = N_Buckets;
-      N_Buckets = 2*(N_Buckets) + 1;
-
-      /* Now, allocate a new bucket list. We need to keep track of the old
-      bucket list, however, so that we can transfer its items and free it. */
-      Item_List<unsigned, V>* Old_Buckets = Buckets;
-      Buckets = new Item_List<unsigned, V>[N_Buckets];
-
-      /* Now, we need to transfer the old buckets into the new bucket list. */
-      for(unsigned i = 0; i < old_N_buckets; i++) {
-        /* For each bucket, we 1-by-1 insert the items in its item list into
-        the new buckets. */
-        Item_Node<unsigned, V>* entry = Old_Buckets[i].Start;
-        while(entry != NULL) {
-          /* Insert entry into the new list of buckets */
-          unsigned key = entry->getKey();
-          V value = entry->getValue();
-          (*this).insert(key, value);
-
-          /* Update entry */
-          entry = entry->getNext();
-        } // while(entry != NULL) {
-      } // for(unsigned i = 0; i < old_N_buckets; i++) {
-
-      /* The buckets should now be transfered. Free the old bucket list. */
-      delete [] Old_Buckets;
-    } // void resize() {
-
+    // Insert, remove, search, resize
+    void insert(unsigned key, V value);     /* Insert an item into the table. */
+    void remove(unsigned key);              /* remove the value with the specified key from the table. */
+    V search(unsigned key) const;           /* Find the value of the item with the specified key. */
+    void resize();                          /* Resie the table */
 
 
     // Printing method
@@ -144,5 +70,87 @@ class Hash_Table {
       return os;
     } // friend std::ostream & operator<<(std::ostream & os, const Hash_Table & Table) {
 }; // class Hash_Table {
+
+
+
+template <typename V>
+void Hash_Table<V>::resize() {
+  /* First, pick a new bucket size. This should be the first prime that is
+  larger than twice the current bucket size.
+  Since I haven't written a prime finding function, I'm just going to use
+  twice the current size plus 1 */
+  unsigned old_N_buckets = N_Buckets;
+  N_Buckets = 2*(N_Buckets) + 1;
+
+  /* Now, allocate a new bucket list. We need to keep track of the old
+  bucket list, however, so that we can transfer its items and free it. */
+  Item_List<unsigned, V>* Old_Buckets = Buckets;
+  Buckets = new Item_List<unsigned, V>[N_Buckets];
+
+  /* Now, we need to transfer the old buckets into the new bucket list. */
+  for(unsigned i = 0; i < old_N_buckets; i++) {
+    /* For each bucket, we 1-by-1 insert the items in its item list into
+    the new buckets. */
+    Item_Node<unsigned, V>* entry = Old_Buckets[i].Start;
+    while(entry != NULL) {
+      /* Insert entry into the new list of buckets */
+      unsigned key = entry->getKey();
+      V value = entry->getValue();
+      (*this).insert(key, value);
+
+      /* Update entry */
+      entry = entry->getNext();
+    } // while(entry != NULL) {
+  } // for(unsigned i = 0; i < old_N_buckets; i++) {
+
+  /* The buckets should now be transfered. Free the old bucket list. */
+  delete [] Old_Buckets;
+} // void Hash_Table<V>::resize() {
+
+
+
+template <typename V>
+void Hash_Table<V>::insert(unsigned key, V value) {
+  // First, calculate the key of the hash
+  unsigned bucket_index = Hash(key);
+
+  // Now, add the new key-value pair into the selected bucket.
+  Buckets[bucket_index].put(key, value);
+
+  /* Finally, check if the length of that bucket's list is longer than the
+  maximum list lenght. If so then resize.  */
+  if(Buckets[bucket_index].GetLength() > Max_List_Length) { (*this).resize(); }
+} // void Hash_Table<V>::insert(unsigned key, V value) {
+
+
+
+template <typename V>
+void Hash_Table<V>::remove(unsigned key) {
+  // Calculate the bucket index.
+  unsigned bucket_index = Hash(key);
+
+  // Remove the item with the specified key from the selected bucket
+  Buckets[bucket_index].remove(key);
+} // void Hash_Table<V>::remove(unsigned key) {
+
+
+
+template <typename V>
+V Hash_Table<V>::search(unsigned key) const {
+  // First, find the bucket index.
+  unsigned bucket_index = Hash(key);
+
+  // Now, try finding an item with the specified key in the selected bucket.
+  try { return Buckets[bucket_index].get(key); }
+  catch (const Item_Not_In_List& Er ) {
+    /* If no item with the specified value can be found, then we raise an
+    Invalid_Key exception. */
+    char Error_Message_Buffer[500];
+    sprintf(Error_Message_Buffer,
+            "Invalid Key Error: This hash table does not have an entry with key %d\n",
+            key);
+    throw Invalid_Key(Error_Message_Buffer);
+  } // catch (const Item_Not_In_List& Er ) {
+} // V Hash_Table<V>::search(unsigned key) const {
 
 #endif
