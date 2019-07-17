@@ -43,9 +43,10 @@ TEST_CASE("Item List tests", "[Item_List]") {
   // let's make an item list.
   Item_List<unsigned, double> List;
 
-  // Let's search for an item in the list. The list should be empty, so this
-  // should throw an exception
+  /* Let's search for an item in the list. The list should be empty, so this
+  should throw an exception. The length of the list should also be 0 */
   REQUIRE_THROWS( List.get(12) );
+  REQUIRE( List.GetLength() == 0 );
 
   /* Add an item, see that it's accessible, remove that item (so that the list
   is empty again) and check that the item is now inaccessible. */
@@ -55,23 +56,29 @@ TEST_CASE("Item List tests", "[Item_List]") {
   List.remove(1);
   REQUIRE_THROWS( List.get(1) );
 
-  // Now, let's add some items and see that they're accessible
-  double value1 = 2.332;
-  double value2 = -1.293;
-  List.put(12, value1);
-  List.put(14, value2);
-  REQUIRE( List.get(14) == value2 );
-  REQUIRE( List.get(12) == value1 );
-  //REQUIRE_THROWS( List.get(5) );
+  /* Now, let's add some items and see that they're accessible. Let's also
+  check that the list is able to keep track of its length */
+  unsigned key1 = 12, key2 = 14;
+  double value1 = 2.332, value2 = -1.293;
+  List.put(key1, value1);
+  List.put(key2, value2);
+  REQUIRE( List.get(key2) == value2 );
+  REQUIRE( List.get(key1) == value1 );
+  REQUIRE_THROWS( List.get(5) );
+  REQUIRE( List.GetLength() == 2 );
 
-  // Now, update one of the values and see that it worked
+  /* Now, update one of the values and see that it worked (and didn't change
+  the length) */
   double value3 = 29392.32;
-  List.put(12, value3);
-  REQUIRE( List.get(12) == value3 );
+  List.put(key1, value3);
+  REQUIRE( List.get(key1) == value3 );
+  REQUIRE( List.GetLength() == 2 );
 
-  // Now, remove an item and make sure that it's inaccessible
-  List.remove(12);
-  REQUIRE_THROWS( List.get(12) );
+  /* Now, remove an item, make sure that it's inaccessible, and that the length
+  decreased */
+  List.remove(key1);
+  REQUIRE_THROWS( List.get(key1) );
+  REQUIRE( List.GetLength() == 1 );
 } // TEST_CASE("Item List tests", "[Item_List]") {
 
 
@@ -154,8 +161,15 @@ TEST_CASE("More Hash Table tests!", "[Hash_Table][More]") {
   H.insert(key2, value1);
   REQUIRE( H.search(key2) == value1 );
 
-  /* There may now be multiple buckets with key key2. Let's remove key2 and
-  check that key2 can no longer be searched for. */
+  /* Let's remove key2 and check that key2 can no longer be searched for. */
   H.remove(key2);
   REQUIRE_THROWS( H.search(key2) );
+
+  /* Now, let's add a few items to the table that get hashed to the same bucket.
+  Since the table is using chaining, this should prompt the table to resize */
+  H.insert(0, value1);
+  H.insert(11, value1);
+  H.insert(22, value1);
+  H.insert(33, value1);
+  std::cout << H << "\n";
 } // TEST_CASE("Hash Table tests!", "[Hash_Table]") {
