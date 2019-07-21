@@ -20,10 +20,10 @@ class Item_Node {
 
   public:
     // Constructor, destructor
-    Item_Node(const K& key, const V& value): Next(NULL) {
+    Item_Node(const K& key, const V& value): Next(nullptr) {
       Thing.key = key;
       Thing.value = value;
-    } // Item_Node(const K& key, const V& value): Next(NULL) {
+    } // Item_Node(const K& key, const V& value): Next(nullptr) {
     ~Item_Node() {}
 
     ////////////////////////////////////////////////////////////////////////////
@@ -77,10 +77,10 @@ class Item_List {
 
   public:
     // Constructors, destructor
-    Item_List() : Start(NULL), End(NULL), Length(0) {}
+    Item_List() : Start(nullptr), End(nullptr), Length(0) {}
     ~Item_List() {
       // Starting from Start, cycle through the nodes and free them 1 by 1
-      while(Start != NULL) {
+      while(Start != nullptr) {
         Item_Node<K, V>* Next = Start->getNext();
         delete Start;
         Start = Next;
@@ -96,7 +96,7 @@ class Item_List {
       key. If so, update that node's value. Otherwise, append a new node to the
       end of the list */
       Item_Node<K, V>* entry = Start;
-      while(entry != NULL) {
+      while(entry != nullptr) {
         /* Check if the key of the current entry matches the key. If so, update
         that node's value and return. Otherwise, move onto the next node */
         if(entry->getKey() == key) {
@@ -104,7 +104,7 @@ class Item_List {
           return;
         } // if(entry->getKey() == key) {
         else { entry = entry->getNext(); }
-      } // while(entry != Null) {
+      } // while(entry != nullptr) {
 
       /* If we are here then that means that new key did not match the key of
       any of the existing nodes in this list. That could mean the list is empty,
@@ -132,10 +132,10 @@ class Item_List {
     void remove(const K key) {
       /* Cycle through the nodes. If we find one whose key matches the specified
       key then remove that item from the list. */
-      Item_Node<K, V>* prev = NULL;
+      Item_Node<K, V>* prev = nullptr;
       Item_Node<K, V>* entry = Start;
 
-      while(entry != NULL) {
+      while(entry != nullptr) {
         // If entry's key matches the specified key, remove that node!
         if(entry->getKey() == key) {
           /* If the first node's key matches the specified key then we just need
@@ -145,12 +145,12 @@ class Item_List {
           if(entry == Start) {
             /* If the entry also happens to be the last item, then entry is the
             only node in the list. Thus, removing it will empty the list. */
-            if(entry == End) { Start = End = NULL; }
+            if(entry == End) { Start = End = nullptr; }
 
             /* Set Start to entry's next pointer.
 
             Note: This will work even if entry == End. In that case,
-            entry->Next is NULL (which is what Start should be in this case) */
+            entry->Next is nullptr (which is what Start should be in this case) */
             Start = entry->getNext();
           } //   if(entry == Start) {
 
@@ -161,21 +161,25 @@ class Item_List {
             /* Update prev's next entry.
 
             Note: This works even if entry == end. In that case,
-            entry->getNext() is NULL (which is what we want prev's next pointer
+            entry->getNext() is nullptr (which is what we want prev's next pointer
             to point to since prev is the ned End). Thus, we don't have to
             modify how prev's Next pointer is updated. */
             prev->setNext(entry->getNext());
           } // else {
 
-          // Now delete the removed node and decrement the length
+          /* Now delete the removed node and decrement the length. Prev is
+          unchanged but Entry points to the next node */
+          Item_Node<K,V>* Next = entry->getNext();
           delete entry;
           Length--;
+          entry = Next;
         } // if(entry->getKey() == key) {
-
-        // Otherwise, move onto the next node
-        prev = entry;
-        entry = entry->getNext();
-      } // while(entry != NULL) {
+        else {
+          // Otherwise, move onto the next node
+          prev = entry;
+          entry = entry->getNext();
+        } // else {
+      } // while(entry != nullptr) {
 
       /* If we get here then that means that the specified key did not match the
       key of any node in the list. In this case, there is nothing to remove, so
@@ -190,13 +194,13 @@ class Item_List {
       /* Search through the items in the list until we find one whose key matches the
       specified key. If no such key is found, throw an exception. */
       Item_Node<K, V>* entry = Start;
-      while(entry != NULL) {
+      while(entry != nullptr) {
         // if entry's key matches the specified key they return that node's value
         if(entry->getKey() == key) { return entry->getValue(); }
 
         // Otherwise, move onto the next item
         entry = entry->getNext();
-      } // while(entry != NULL)
+      } // while(entry != nullptr)
 
       /* If we get here then none of the items in the list had a key that
       matched the specified key. As such, throw an exception! */
@@ -216,14 +220,14 @@ class Item_List {
     friend std::ostream& operator<<(std::ostream & os, const Item_List<K, V>& List) {
       Item_Node<K, V>* entry = List.Start;
 
-      while(entry != NULL) {
+      while(entry != nullptr) {
         os << "{" << entry->getKey() << " : " << entry->getValue() << "}";
 
         // If there is another node to print then indiciate so with an arrow
-        if(entry->getNext() != NULL ) { os << " -> "; }
+        if(entry->getNext() != nullptr ) { os << " -> "; }
 
         entry = entry->getNext();
-      } // while(entry != NULL) {
+      } // while(entry != nullptr) {
 
       return os;
     } // std::ostream& operator<<(std::ostream & os, const Item_Node<K, V>& List) {
@@ -232,4 +236,4 @@ class Item_List {
     friend class Hash_Table;
 }; // class Item_List {
 
-#endif 
+#endif
